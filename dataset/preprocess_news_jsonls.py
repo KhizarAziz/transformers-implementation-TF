@@ -122,7 +122,7 @@ def _is_definitely_unique(article):
 ########################################################################
 ########################################################################
 
-
+from tqdm import tqdm
 
 class Process_News_Data():
     def __init__(self,base_path):
@@ -144,8 +144,9 @@ class Process_News_Data():
         """
         article_list = []
         for jsonl_file_path in self.base_path.glob('*.jsonl'):
+            print('\nReading jsonl: ',jsonl_file_path)
             with open(jsonl_file_path, 'r') as json_file:
-                for line in json_file: # reading lines from the file (each line represents each json string because there is a line break at the end of each json)
+                for line in tqdm(json_file): #reading lines from the file (each line represents each json string because there is a line break at the end of each json)
                     try:
                         article = json.loads(line)
                         # Preprocessing could go here
@@ -159,9 +160,9 @@ class Process_News_Data():
 
 
 # define all parameters here
-dataset_base_path = 'dummy_jsonl_data/'
+dataset_base_path = 'news_datasets/realnews/'
 dataset_name = 'realnews' # different dataset name means different sequence for loading etc
-out_filename = dataset_base_path+'/dummy_output.jsonl'
+out_filename = dataset_base_path+'/preprocessed_all.jsonl'
 
 if __name__ == "__main__":
 
