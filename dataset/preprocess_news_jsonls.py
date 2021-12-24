@@ -143,6 +143,7 @@ class Process_News_Data():
 
         """
         article_list = []
+        print('Reading Files From: {} \n\n\n '.format(self.base_path))
         for jsonl_file_path in self.base_path.glob('*.jsonl'):
             print('\nReading jsonl: ',jsonl_file_path)
             with open(jsonl_file_path, 'r') as json_file:
@@ -160,8 +161,8 @@ class Process_News_Data():
 
 
 # define all parameters here
-dataset_base_path = 'news_datasets/realnews/'
-dataset_name = 'realnews' # different dataset name means different sequence for loading etc
+dataset_base_path = 'news_datasets/c4_single_json/'
+#dataset_name = 'realnews' # different dataset name means different sequence for loading etc
 out_filename = dataset_base_path+'/preprocessed_all.jsonl'
 
 if __name__ == "__main__":
