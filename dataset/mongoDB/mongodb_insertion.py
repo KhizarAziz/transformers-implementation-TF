@@ -12,15 +12,18 @@ import shutil
 import tqdm
 # def insert_jsonls():
 
+from utils import configs as config
+
+db = config.MONGO_DB  # create db with name if doesnt exist else connect to ths db
+collection = config.MONGO_COL
+
 
 if __name__ == "__main__":
     print('welcom to mongo')
     client = pymongo.MongoClient('mongodb://localhost:27017') # connect to db
     # print(client)
 
-    db = client['CC_db'] # create db with name if doesnt exist else connect to ths db
 
-    collection = db['all_news_articles']
     collection.create_index("text", unique=True)
 
     jsonls_source_path = Path("data_source")
