@@ -1,13 +1,11 @@
-import configs as config
+from utils import configs as config
 db = config.MONGO_DB
 col = config.MONGO_COL
 
 
 
-
-
 def group_data_by_year_and_month():
-    result = db.col.aggregate(
+    result = col.aggregate(
         [
             {
                 "$group":
@@ -29,13 +27,13 @@ def group_data_by_year_and_month():
 
 
 def get_data_by_year_month(year, month=1, sort_key='publish_date'):
-    docs = db.col.find({'year': {'$eq': year}, 'month': {'$eq': month}}).sort(sort_key, -1)
+    docs = col.find({'year': {'$eq': year}, 'month': {'$eq': month}}).sort(sort_key, -1)
 
     return docs
 
 
 def group_data_by_date():
-    result = db.col.aggregate(
+    result = col.aggregate(
         [
             {
                 "$group":
@@ -51,10 +49,11 @@ def group_data_by_date():
             continue
         dates.append(res['_id']['date'])
 
+    print('demo dates :',dates[-2:], '\n')
     return sorted(dates)
 
 
 def get_data_by_date(prev_date, current_date, sort_key='publish_date'):
-    docs = db.col.find({'publish_date': {'$gte': prev_date, '$lte': current_date}}).sort(sort_key, -1)
+    docs = col.find({'publish_date': {'$gte': prev_date, '$lte': current_date}}).sort(sort_key, -1)
 
     return docs

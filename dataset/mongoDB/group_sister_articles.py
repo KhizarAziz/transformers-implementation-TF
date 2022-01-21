@@ -1,9 +1,13 @@
 import json
 import os
 import time
-
+import pdb
 from sentence_transformers import SentenceTransformer, util
 from utils import FilterData as mongo_agg
+
+
+
+#print(mongo_agg.name(), '\n\n  jkshajkhsba \n\n ')
 
 def read_jsonl_file(filename):
     print('\nReading Jsonl.....')
@@ -42,7 +46,8 @@ def get_embeddings(summaries):
     print('\nEmbedding started.....')
     start = time.time()
     model_name = "all-MiniLM-L6-v2"
-    model_path = os.getcwd() + "\\" + model_name
+    model_path = os.getcwd() + "/utils/" + model_name
+    print(os.getcwd(),'Model path: ',model_path,'\n\n\n')
     model = SentenceTransformer(model_path)
     corpus_sentences = list(summaries)
     print("\nEncode the corpus. This might take a while")
@@ -61,7 +66,7 @@ def get_sister_articles(crps_embeddings):
         min_cluster_size: Only consider cluster that have at least 5 elements
         threshold: Consider sentence pairs with a cosine-similarity larger than threshold as similar
     '''
-    clusters = util.community_detection_with_score(crps_embeddings, min_community_size=3, threshold=0.75)
+    clusters = util.community_detection(crps_embeddings, min_community_size=3, threshold=0.45)
 
     print("found sister articles after {:.2f} sec".format(time.time() - start_time))
 
@@ -128,16 +133,21 @@ def save_to_json(corp_sentences, clstrs, output_filename, article_obj, folder):
         for key, value in articles_obj.items():
             f.write("{'%s': %s}\n" % (key, value))
 
-
 grouped_data = mongo_agg.group_data_by_date()
-directory = '2days_articles'
+directory = 'grouped_articles'
 path = os.path.join(os.getcwd(), directory)
 try:
     os.mkdir(path)
 except FileExistsError:
     pass
 
-for date_group in zip(grouped_data[0::2], grouped_data[1::2]):
+
+#print(len(grouped_data), "     is the grouped ddata    \n\n\n\n\et_trace()
+#pdb.set_trace()
+
+for index,date_group in enumerate(zip(grouped_data[0::2], grouped_data[1::2])):
+    print('index:', index)
+
     prev_date = date_group[0]
     current_date = date_group[1]
     try:
@@ -148,11 +158,12 @@ for date_group in zip(grouped_data[0::2], grouped_data[1::2]):
             continue
         embeddings = get_embeddings(sentences)
         sister_articles = get_sister_articles(embeddings)
+        print('sister articles found: ', len(sister_articles))
         if not sister_articles:
             continue
         output_filename = str(prev_date.year) + '-' + str(prev_date.month) + '-' + str(prev_date.day) + '-to-' + str(
-            current_date.year) + '-' \
-                          + str(current_date.month) + '-' + str(current_date.day) + '-sister-articles.jsonl'
+            current_date.year) + '-' + str(current_date.month) + '-' + str(current_date.day) + '-sister-articles.jsonl'
+        
         save_to_json(sentences, sister_articles, output_filename, article_data, directory)
-    except TypeError:
-        pass
+    except Exception as e:
+        print('Excption in grouping: ',e)
