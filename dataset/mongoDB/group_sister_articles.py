@@ -1,18 +1,16 @@
 import json
 import os
 import time
-import pdb
+import datetime
+
 from sentence_transformers import SentenceTransformer, util
-from utils import FilterData as mongo_agg
+import FilterData as mongo_agg
 
-
-
-#print(mongo_agg.name(), '\n\n  jkshajkhsba \n\n ')
 
 def read_jsonl_file(filename):
     print('\nReading Jsonl.....')
     st = time.time()
-    f = open(filename, "r", encoding="utf8")
+    f = open(filename, "r", encoding="utf-8")
     objs = f.readlines()
     summaries = set()
     artcile_title_url = dict()
@@ -46,8 +44,7 @@ def get_embeddings(summaries):
     print('\nEmbedding started.....')
     start = time.time()
     model_name = "all-MiniLM-L6-v2"
-    model_path = os.getcwd() + "/utils/" + model_name
-    print(os.getcwd(),'Model path: ',model_path,'\n\n\n')
+    model_path = os.getcwd() + "\\" + model_name
     model = SentenceTransformer(model_path)
     corpus_sentences = list(summaries)
     print("\nEncode the corpus. This might take a while")
@@ -66,19 +63,12 @@ def get_sister_articles(crps_embeddings):
         min_cluster_size: Only consider cluster that have at least 5 elements
         threshold: Consider sentence pairs with a cosine-similarity larger than threshold as similar
     '''
-    clusters = util.community_detection(crps_embeddings, min_community_size=3, threshold=0.45)
+    # clusters = util.community_detection(crps_embeddings, min_community_size=5, threshold=0.75, max_threshold=0.83)
+    clusters = util.community_detection_with_score(crps_embeddings, min_community_size=3, threshold=0.75)
 
     # print("found sister articles after {:.2f} sec".format(time.time() - start_time))
 
     return clusters
-
-
-def paraphrase_text(model, texts):
-    paraphrases = util.paraphrase_mining(model, texts)
-
-    for paraphrase in paraphrases[0:10]:
-        score, i, j = paraphrase
-        print("{} \t\t {} \t\t Score: {:.4f}".format(texts[i], texts[j], score))
 
 
 def show_clusters(corps_sentences, clsters, article_obj):
@@ -86,6 +76,7 @@ def show_clusters(corps_sentences, clsters, article_obj):
     # Print for all clusters the top 2 and bottom 2 elements
     for i, cluster in enumerate(clsters):
         print("\nCluster {}, #{} Elements ".format(i + 1, len(cluster)))
+        # first_two_clusters = dict(itertools.islice(cluster.items(), 2))
         for sentence_id, score in list(cluster.items())[0:2]:
             print("\tTitle:", "".join(corpus_sentences[sentence_id].split(" -- ")[0]))
             print("\tSummary:", "".join(corpus_sentences[sentence_id].split(" -- ")[1]))
@@ -98,6 +89,7 @@ def save_to_json(corp_sentences, clstrs, output_filename, article_obj, folder):
 
     for i, clustr in enumerate(clstrs):
         clust_obj = dict()
+
         for j, (sentence_id, score) in enumerate(clustr.items()):
             sister_article = dict()
             sister_article['title'] = "".join(corpus_sentences[sentence_id].split(" -- ")[0])
@@ -127,13 +119,20 @@ def save_to_json(corp_sentences, clstrs, output_filename, article_obj, folder):
             sister_article['text'] = article_obj[corpus_sentences[sentence_id]]['text']
             sister_article['score'] = score
             clust_obj["S" + str(j)] = sister_article
-        articles_obj['A' + str(i)] = clust_obj
+        articles_obj["A" + str(i)] = clust_obj
+        # json.dump(articles_obj, f, ensure_ascii=False, indent=4)
 
-    with open(folder + '/' + output_filename, 'w', encoding='utf-8') as f:
-        for key, value in articles_obj.items():
-            f.write("{'%s': %s}\n" % (key, value))
+        with open(folder + '/' + output_filename, 'w', encoding='utf-8') as f:
+            for key, value in articles_obj.items():
+                data_dump = dict()
+                data_dump[key] = value
+                f.write(json.dumps(data_dump))
+                f.write('\n')
+                # f.write('{%s: %s}\n' % (key, value))
+
 
 grouped_data = mongo_agg.group_data_by_date()
+<<<<<<< HEAD
 directory = 'grouped_articles_new'
 path = os.path.join(os.getcwd(), directory)
 try:
@@ -147,10 +146,22 @@ except FileExistsError:
 total_groups = len(grouped_data)
 for index,date_group in enumerate(zip(grouped_data[0::2], grouped_data[1::2])):
     #print('index:', index)
+=======
+directory = 'New2days_articles'
+path = os.path.join(os.getcwd(), directory)
 
+if not os.path.exists(path):
+    os.mkdir(path)
+>>>>>>> 51156d97f1ee3feb127a388df218e46e6e094599
+
+for date_group in zip(grouped_data[0::2], grouped_data[1::2]):
     prev_date = date_group[0]
     current_date = date_group[1]
+<<<<<<< HEAD
     print('current Date: {} ||| Group# : {}/{}'.format(current_date,index,total_groups))
+=======
+
+>>>>>>> 51156d97f1ee3feb127a388df218e46e6e094599
     try:
         docs = mongo_agg.get_data_by_date(prev_date, current_date)
         sentences, article_data = read_json_data(list(docs))
@@ -159,12 +170,12 @@ for index,date_group in enumerate(zip(grouped_data[0::2], grouped_data[1::2])):
             continue
         embeddings = get_embeddings(sentences)
         sister_articles = get_sister_articles(embeddings)
-        print('sister articles found: ', len(sister_articles))
         if not sister_articles:
             continue
         output_filename = str(prev_date.year) + '-' + str(prev_date.month) + '-' + str(prev_date.day) + '-to-' + str(
-            current_date.year) + '-' + str(current_date.month) + '-' + str(current_date.day) + '-sister-articles.jsonl'
-        
+            current_date.year) + '-' \
+                          + str(current_date.month) + '-' + str(current_date.day) + '-sister-articles.jsonl'
         save_to_json(sentences, sister_articles, output_filename, article_data, directory)
-    except Exception as e:
-        print('Excption in grouping: ',e)
+
+    except TypeError:
+        pass
