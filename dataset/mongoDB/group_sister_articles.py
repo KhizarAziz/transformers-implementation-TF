@@ -58,7 +58,7 @@ def get_embeddings(summaries):
 
 
 def get_sister_articles(crps_embeddings):
-    print("Start finding sister articles")
+    #print("Start finding sister articles")
     start_time = time.time()
 
     '''
@@ -68,7 +68,7 @@ def get_sister_articles(crps_embeddings):
     '''
     clusters = util.community_detection(crps_embeddings, min_community_size=3, threshold=0.45)
 
-    print("found sister articles after {:.2f} sec".format(time.time() - start_time))
+    # print("found sister articles after {:.2f} sec".format(time.time() - start_time))
 
     return clusters
 
@@ -134,7 +134,7 @@ def save_to_json(corp_sentences, clstrs, output_filename, article_obj, folder):
             f.write("{'%s': %s}\n" % (key, value))
 
 grouped_data = mongo_agg.group_data_by_date()
-directory = 'grouped_articles'
+directory = 'grouped_articles_new'
 path = os.path.join(os.getcwd(), directory)
 try:
     os.mkdir(path)
@@ -144,12 +144,13 @@ except FileExistsError:
 
 #print(len(grouped_data), "     is the grouped ddata    \n\n\n\n\et_trace()
 #pdb.set_trace()
-
+total_groups = len(grouped_data)
 for index,date_group in enumerate(zip(grouped_data[0::2], grouped_data[1::2])):
-    print('index:', index)
+    #print('index:', index)
 
     prev_date = date_group[0]
     current_date = date_group[1]
+    print('current Date: {} ||| Group# : {}/{}'.format(current_date,index,total_groups))
     try:
         docs = mongo_agg.get_data_by_date(prev_date, current_date)
         sentences, article_data = read_json_data(list(docs))

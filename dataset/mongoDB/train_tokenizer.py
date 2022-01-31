@@ -11,6 +11,9 @@ from tokenizers.normalizers import NFKC
 from tqdm import tqdm
 import read_tfrecords
 
+#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"                                    │  def __init__(self, input_dir, vocab_size):
+os.environ["CUDA_VISIBLE_DEVICES"] = "5" 
+
 class Train_tokenizer:
   def __init__(self, input_dir, vocab_size):
 
@@ -22,18 +25,20 @@ class Train_tokenizer:
       self.output_dir = "./out_tokenizer/"
       
       if (os.path.exists(self.output_dir) and os.path.isdir(self.output_dir)):
-          shutil.rmtree(self.output_dir)
-      os.mkdir(self.output_dir)
+        #shutil.rmtree(self.output_dir)
+        pass
+     else: 
+        os.mkdir(self.output_dir)
       
-      self.rtfrecords = read_tfrecords.Read_tfrecords(self.input_dir)
+      self.rtfrecords = read_tfrecords.Read_tfrecords()
 
   def train_tokenizer(self):
     """
     Read txt files and train tokenizer and save it json file for encoding / decoding later
     """
-
-    data = self.rtfrecords.read_tfrecords()
-    file_path = self.output_dir+"/data.txt"
+    data = self.rtfrecords.read_tfrecords(self.input_dir)
+    print("Total examples : ", len(data))
+    file_path = self.output_dir+"/tokenizer_data.txt"
   
     with open(file_path, "w") as f:
       for example in data:
@@ -66,8 +71,8 @@ class Train_tokenizer:
 if __name__ == "__main__":
   # parser
   parser = argparse.ArgumentParser()
-  parser.add_argument("--input_dir", type=str, default='./tf_records/', help="Path to where your tf_rec files are placed")
-  parser.add_argument("--vocab_size", type=int, default=10000, help="Vocab size is a hyper-parameter, set it accordingly your data size")
+  parser.add_argument("--input_dir", type=str, default='./grouped_articles_new_tfrecords_final/', help="Path to where your tf_rec files are placed")
+  parser.add_argument("--vocab_size", type=int, default=5000, help="Vocab size is a hyper-parameter, set it accordingly your data size")
   args = parser.parse_args()
 
   input_dir = args.input_dir
